@@ -2,38 +2,35 @@
 #include "PubSubClient.h"
 #include "WiFiConnect.h"
 
-// unsigned long prevBrokerReconnectTime = 0;
+unsigned long prevBrokerReconnectTime = 0;
 
 // WiFiClient espClient;
 // PubSubClient client(espClient);
 
-// void mqttBrokerInit(void)
-// {
-//     client.setServer(MQTT_SERVER, MQTT_PORT);
-//     client.setCallback(callback);
-// }
-
-/*bool reconnectClientToBroker(void)
+/*void mqttBrokerInit(PubSubClient brokerClientObj)
 {
-  if (client.connect("ESP32Client", MQTT_USERNAME, MQTT_PASSWORD))          // check id
+    brokerClientObj.setServer(MQTT_SERVER, MQTT_PORT);
+    // brokerClientObj.setCallback(callback);
+}*/
+
+/*bool reconnectClientToBroker(PubSubClient brokerClientObj)
+{
+  if (brokerClientObj.connect(MQTT_CLIENT, MQTT_USERNAME, MQTT_PASSWORD))          // check id
   {
-    // Once connected, publish an announcement...
+    // Once connected, publish data if needed
     // client.publish(PUBLISH_TOPIC1, "hello world");
     
     // ... and resubscribe
-    client.subscribe(SUBSCRIBE_TOPIC1);
+    brokerClientObj.subscribe(SUBSCRIBE_TOPIC1);
   }
-
   else
   {
     Serial.print("failed, rc=");
-    Serial.print(client.state());
-    // Serial.println(" try again in 5 seconds");
-
+    Serial.print(brokerClientObj.state());
     // Wait 5 seconds before retrying
     // delay(5000);
   }
-  return client.connected();
+  return brokerClientObj.connected();
 }*/
 
 /*void callback(char *topic, uint8_t *message, uint16_t length)
@@ -56,38 +53,71 @@
   if (String(topic) == "esp32/output")
   {
     // do some stuff
-    /*if (messageTemp == "sendMoreData")
+    if (messageTemp == "sendMoreData")
     {
-      client.publish("esp32/dummy", "Here is more data");
-    }*/
-    
-//   }
-// }*/
+      // client.publish("esp32/dummy", "Data received!!!");
+    }
+  }
+}*/
 
-/*void publishtoBroker(char* topic, uint8_t payload)
-{
-    client.publish(topic, String(payload));    // third parameter was 150
-}
+// void publishtoBroker(char* topic, uint8_t payload)
+// {
+//     client.publish(topic, String(payload));    // third parameter was 150
+// }
 
-void isClientConnected(void)
+void isClientConnected(PubSubClient brokerClientObj)
 {
-    if (!client.connected())
+  // Using this logic now
+  /*if (!brokerClientObj.connected())
+  {
+    long currentBrokerConnectTime = millis();
+    if (currentBrokerConnectTime - prevBrokerReconnectTime > MQTT_RECONNECT_TIMEOUT)
     {
-        long currentBrokerConnectTime = millis();
-        if (currentBrokerConnectTime - prevBrokerReconnectTime > 5000)
-        {
-            prevBrokerReconnectTime = currentBrokerConnectTime;
+      prevBrokerReconnectTime = currentBrokerConnectTime;
 
-            // Attempt to reconnect
-            if (reconnectClientToBroker())
-            {
-                prevBrokerReconnectTime = 0; // ?
-            }
-        }
+      // Attempt to reconnect
+      if (reconnectClientToBroker(brokerClientObj))
+      {
+        prevBrokerReconnectTime = 0;
+      }
+    }
+  }
+  else
+  {
+    // Client connected
+    brokerClientObj.loop();
+  }*/
+
+  // Other logic with indpendent checking of MQTT irrespect of WiFi connection
+  /*unsigned long currentBrokerConnectTime = millis();
+  if (currentBrokerConnectTime - prevBrokerReconnectTime > MQTT_RECONNECT_TIMEOUT)
+  {
+    prevBrokerReconnectTime = currentBrokerConnectTime;
+
+    if (!brokerClientObj.connected())
+    {
+      // Attempt to reconnect
+      reconnectClientToBroker(brokerClientObj);
     }
     else
     {
-        // Client connected
-        client.loop();
-    }
-}*/
+      // Client connected
+      brokerClientObj.loop();
+    }   
+  }*/
+
+  // Other logic to check MQTT only when WiFi connection is checked
+  if (!brokerClientObj.connected())
+  {
+    // added
+    brokerClientObj.disconnect();
+    // Attempt to reconnect
+    reconnectClientToBroker(brokerClientObj);
+    Serial.println("Broker connection remade");
+  }
+  else
+  {
+    // Client connected
+    brokerClientObj.loop();
+  }
+}

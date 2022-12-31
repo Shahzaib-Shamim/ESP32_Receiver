@@ -96,7 +96,6 @@ typedef struct
  * 
  */
 void updatePacket1(Packet1_t *, uint8_t *);
-
 void updatePacket2(Packet2_t *, uint8_t *);
 
 /**

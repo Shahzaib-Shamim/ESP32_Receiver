@@ -9,19 +9,19 @@
 #include "WiFiConnect.h"
 #include "MQTTBroker.h"
 
-/////////////////////////////
+// -----------------------------------
 // MACROS
-/////////////////////////////
+// -----------------------------------
 #define INTERVAL                1000
 #define BROKER_STATUS_CHECK     5000
 
-/////////////////////////////
+// ----------------------------------
 // Global variables
-/////////////////////////////
+// ----------------------------------
 bool isConnected = false;
 uint8_t counter = 0;
 unsigned long lastTimeWiFiStatusCheck = 0;
-unsigned long prevBrokerReconnectTime = 0;
+// unsigned long prevBrokerReconnectTime = 0;
 unsigned long prevBrokerStatusCheck = 0;
 unsigned long prevTask1Time = 0;
 const uint16_t msgLength = 2048;
@@ -73,12 +73,12 @@ void callback(char *topic, uint8_t *message, uint16_t length)
   // Changes the output state according to the message
   if (String(topic) == "esp32/output")
   {
-    // do some stuff
-    /*if (messageTemp == "sendMoreData")
-    {
-      client.publish("esp32/dummy", "Here is more data");
-    }*/
-    
+    // if (messageTemp == "sendMoreData")
+    // {
+    //   // client.publish("esp32/dummy", "Data received!!!");
+    // }
+    Serial.println("Data received!!!");
+    client.publish("esp32/dummy", "Data received!!!");
   }
 }
 
@@ -98,7 +98,11 @@ void setup()
   // MQTT broker setup
   client.setServer(MQTT_SERVER, MQTT_PORT);
   client.setCallback(callback);
-  // mqttBrokerInit()
+  
+  // mqttBrokerInit(client);
+  // client.setCallback(callback);
+
+  delay(2000);
 }
 
 void loop()
@@ -124,17 +128,29 @@ void loop()
       ++lostWiFiCount;
       Serial.println("Lost WiFi " + String(lostWiFiCount) + ", reconnecting...");
       connectToWiFi();
+      // isClientConnected(client);  // added to test new mqtt code
+
+      /*if (!client.connected())
+      {
+        // added
+        client.disconnect();
+        // Attempt to reconnect
+        reconnectClientToBroker();
+        Serial.println("Broker connection remade");
+      }
+      else
+      {
+        // Client connected
+        client.loop();
+      }*/
+      reconnectClientToBroker();    // added client argument
+      Serial.println("Broker connection remade");
       isConnected = false;
     }
     lastTimeWiFiStatusCheck = timeWiFiStatusCheck;
   }
 
-
-
-
-
-
-  // Some random task
+  // Some random task to send data on MQTT
   unsigned long currentTask1Time = millis();
   if(currentTask1Time - prevTask1Time > 2000)
   {
@@ -143,16 +159,18 @@ void loop()
     
     client.publish(PUBLISH_TOPIC1, String(countBroker).c_str());    // third parameter was 150
     // publishtoBroker(PUBLISH_TOPIC1, countBroker);
-
+    Serial.println("Published");
 
     prevTask1Time = currentTask1Time;
   }
 
+
+  // commented to test new mqtt code
   // Checking broker conenction status
-  unsigned long currentBrokerStatusCheck = millis();
-  if(currentBrokerStatusCheck - prevBrokerStatusCheck > 1000)
-  {
-    if (!client.connected())
+  // unsigned long currentBrokerStatusCheck = millis();
+  // if(currentBrokerStatusCheck - prevBrokerStatusCheck > MQTT_RECONNECT_TIMEOUT)
+  // {
+    /*if (!client.connected())
     {
       long currentBrokerConnectTime = millis();
       if (currentBrokerConnectTime - prevBrokerReconnectTime > 5000)
@@ -165,6 +183,26 @@ void loop()
           prevBrokerReconnectTime = 0; // ?
         }
       }
+    }
+    else
+    {
+      // Client connected
+      client.loop();
+    }*/
+    // prevBrokerStatusCheck = currentBrokerStatusCheck;
+  // }
+
+
+  unsigned long currentBrokerStatusCheck = millis();
+  if(currentBrokerStatusCheck - prevBrokerStatusCheck > MQTT_RECONNECT_TIMEOUT)
+  {
+    if (!client.connected())
+    {
+      client.disconnect();
+      if(reconnectClientToBroker()) // added client argument
+      {
+        Serial.println("Broker connection remade");
+      }      
     }
     else
     {

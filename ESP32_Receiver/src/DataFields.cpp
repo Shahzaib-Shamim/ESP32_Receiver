@@ -67,9 +67,8 @@ void updatePacket1(Packet1_t *obj, uint8_t *buffer)
 void updatePacket2(Packet2_t *obj, uint8_t *buffer)
 {
     memcpy(obj, &buffer[4], sizeof(*obj));
-    /*Serial.println("Packet2 received");
-    
-    Serial.print((uint8_t)obj->packetType); Serial.print(",");
+
+    /*Serial.print((uint8_t)obj->packetType); Serial.print(",");
     Serial.print(obj->batteryID);           Serial.print(",");
     Serial.print(obj->batterySerialNo);     Serial.print(",");
     
@@ -134,9 +133,7 @@ bool calculateChecksum(uint8_t *buffer, uint16_t packetSize, uint16_t index)
         sumPacket += *(pPacket);
         pPacket++;
     }
-    // Serial.println("SumCalc " + String(sumPacket));
-    // Serial.println("SumRx " + String(checksumPacketRx));
-
+    
     if (sumPacket == checksumPacketRx)
     {
         return true;

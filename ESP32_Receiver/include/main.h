@@ -7,10 +7,8 @@
 // MACROS
 // ------------------------------------------------
 #define INTERVAL      1000
-// #define TX2           17
-// #define RX2           16
-// #define TX2           32
-// #define RX2           35
+// #define TX2           17         // issue with WiFi
+// #define RX2           16         // issue with WiFi
 #define TX2           19
 #define RX2           18
 
