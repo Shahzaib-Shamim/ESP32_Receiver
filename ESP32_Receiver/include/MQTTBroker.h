@@ -47,6 +47,6 @@ bool isClientConnected(PubSubClient& brokerClientObj);
 /**
  * Callback to publish a message or when message is received
 */
-// void callback(char *, uint8_t *, uint16_t);
+void callbackHandler(PubSubClient& brokerClientObj, char *topic, uint8_t *message, uint16_t length);
 
 #endif /* __MQTTBROKER_H__ */

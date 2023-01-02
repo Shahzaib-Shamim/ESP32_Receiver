@@ -20,6 +20,9 @@ typedef enum
 extern Packet1_t packet1;
 extern Packet2_t packet2;
 
+extern bool packet1Flag;
+extern bool packet2Flag;
+
 // ------------------------------------------------
 // Global functions
 // ------------------------------------------------

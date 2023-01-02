@@ -1,4 +1,5 @@
 #include "Serial.h"
+#include "JSON.h"
 
 // ------------------------------------------------
 // Global variables
@@ -9,6 +10,9 @@ rxState_e rxState = RX_HEADER_LSB;
 
 Packet1_t packet1;
 Packet2_t packet2;
+
+bool packet1Flag = false;
+bool packet2Flag = false;
 
 void processSerial(void)
 {
@@ -59,6 +63,8 @@ void processSerial(void)
                 if (calculateChecksum(readData, sizeof(packet1), count))
                 {
                     updatePacket1(&packet1, readData);
+                    packet1Flag = true;
+                    packet2Flag = false;
                 }
                 else
                 {
@@ -71,6 +77,8 @@ void processSerial(void)
                 if (calculateChecksum(readData, sizeof(packet2), count))
                 {
                     updatePacket2(&packet2, readData);
+                    packet1Flag = false;
+                    packet2Flag = true;
                 }
                 else
                 {

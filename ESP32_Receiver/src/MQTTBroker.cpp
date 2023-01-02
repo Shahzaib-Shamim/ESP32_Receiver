@@ -25,7 +25,30 @@ bool reconnectClientToBroker(PubSubClient& brokerClientObj)
   return brokerClientObj.connected();
 }
 
-/*void callback(char *topic, uint8_t *message, uint16_t length)
+bool isClientConnected(PubSubClient& brokerClientObj)
+{
+  // Other logic to check MQTT only when WiFi connection is checked
+  if (!brokerClientObj.connected())
+  {
+    brokerClientObj.disconnect();
+    // Attempt to reconnect
+    // reconnectClientToBroker(brokerClientObj);
+    if(reconnectClientToBroker(brokerClientObj))
+    {
+      return true;
+    }
+    
+  }
+  // else
+  // {
+  //   // Client connected
+  //   // brokerClientObj.loop();
+  //   return false;
+  // }
+  return false;
+}
+
+/*void callbackHandler(PubSubClient &brokerObj, char *topic, uint8_t *message, uint16_t length)
 {
   Serial.print("Message arrived on topic: ");
   Serial.print(topic);
@@ -42,73 +65,37 @@ bool reconnectClientToBroker(PubSubClient& brokerClientObj)
 
   // If a message is received on the topic esp32/output, you check if the message is either "on" or "off".
   // Changes the output state according to the message
-  if (String(topic) == "esp32/output")
+  if (String(topic) == topic)
   {
-    // do some stuff
-    if (messageTemp == "sendMoreData")
+    if (messageTemp == "Did you received??")
+    {
+      brokerObj.publish("esp32/dummy", "Data received!!!");
+    }
+  }
+}
+
+void callback(char *topic, uint8_t *message, uint16_t length)
+{
+  Serial.print("Message arrived on topic: ");
+  Serial.print(topic);
+  Serial.print(". Message: ");
+
+  String messageTemp;
+
+  for (int i = 0; i < length; i++)
+  {
+    Serial.print((char)message[i]);
+    messageTemp += (char)message[i];
+  }
+  Serial.println();
+
+  // If a message is received on the topic esp32/output, you check if the message is either "on" or "off".
+  // Changes the output state according to the message
+  if (String(topic) == SUBSCRIBE_TOPIC1)    //"esp32/output"
+  {
+    if (messageTemp == "Did you received??")
     {
       // client.publish("esp32/dummy", "Data received!!!");
     }
   }
 }*/
-
-bool isClientConnected(PubSubClient& brokerClientObj)
-{
-  // Using this logic now
-  /*if (!brokerClientObj.connected())
-  {
-    long currentBrokerConnectTime = millis();
-    if (currentBrokerConnectTime - prevBrokerReconnectTime > MQTT_RECONNECT_TIMEOUT)
-    {
-      prevBrokerReconnectTime = currentBrokerConnectTime;
-
-      // Attempt to reconnect
-      if (reconnectClientToBroker(brokerClientObj))
-      {
-        prevBrokerReconnectTime = 0;
-      }
-    }
-  }
-  else
-  {
-    // Client connected
-    brokerClientObj.loop();
-  }*/
-
-  // Other logic with indpendent checking of MQTT irrespect of WiFi connection
-  /*unsigned long currentBrokerConnectTime = millis();
-  if (currentBrokerConnectTime - prevBrokerReconnectTime > MQTT_RECONNECT_TIMEOUT)
-  {
-    prevBrokerReconnectTime = currentBrokerConnectTime;
-
-    if (!brokerClientObj.connected())
-    {
-      // Attempt to reconnect
-      reconnectClientToBroker(brokerClientObj);
-    }
-    else
-    {
-      // Client connected
-      brokerClientObj.loop();
-    }   
-  }*/
-
-  // Other logic to check MQTT only when WiFi connection is checked
-  if (!brokerClientObj.connected())
-  {
-    brokerClientObj.disconnect();
-    // Attempt to reconnect
-    // reconnectClientToBroker(brokerClientObj);
-    if(reconnectClientToBroker(brokerClientObj))
-    {
-      return true;
-    }
-    
-  }
-  else
-  {
-    // Client connected
-    // brokerClientObj.loop();
-    return false;
-  }
-}
