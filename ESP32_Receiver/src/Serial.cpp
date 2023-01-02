@@ -28,8 +28,8 @@ void processSerial(void)
     case RX_HEADER_MSB:
         if (data == '#')
         {
-            memset(&packet1, 0, sizeof(packet1));
-            memset(&packet2, 0, sizeof(packet2));   // added
+            // memset(&packet1, 0, sizeof(packet1));
+            // memset(&packet2, 0, sizeof(packet2));
             rxState = RX_DATA;
         }
         else

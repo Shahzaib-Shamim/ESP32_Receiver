@@ -21,7 +21,6 @@
 bool isConnected = false;
 uint8_t counter = 0;
 unsigned long lastTimeWiFiStatusCheck = 0;
-// unsigned long prevBrokerReconnectTime = 0;
 unsigned long prevBrokerStatusCheck = 0;
 unsigned long prevTask1Time = 0;
 const uint16_t msgLength = 2048;
@@ -30,29 +29,6 @@ uint8_t countBroker = 0;
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-
-bool reconnectClientToBroker(void)
-{
-  if (client.connect("ESP32Client", MQTT_USERNAME, MQTT_PASSWORD))          // check id
-  {
-    // Once connected, publish an announcement...
-    // client.publish(PUBLISH_TOPIC1, "hello world");
-    
-    // ... and resubscribe
-    client.subscribe(SUBSCRIBE_TOPIC1);
-  }
-
-  else
-  {
-    Serial.print("failed, rc=");
-    Serial.print(client.state());
-    // Serial.println(" try again in 5 seconds");
-
-    // Wait 5 seconds before retrying
-    // delay(5000);
-  }
-  return client.connected();
-}
 
 void callback(char *topic, uint8_t *message, uint16_t length)
 {
@@ -96,11 +72,11 @@ void setup()
   connectToWiFi();
 
   // MQTT broker setup
-  client.setServer(MQTT_SERVER, MQTT_PORT);
+  mqttBrokerInit(client);
   client.setCallback(callback);
-  
-  // mqttBrokerInit(client);
-  // client.setCallback(callback);
+
+  memset(&packet1, 0, sizeof(packet1));
+  memset(&packet2, 0, sizeof(packet2));
 
   delay(2000);
 }
@@ -129,21 +105,7 @@ void loop()
       Serial.println("Lost WiFi " + String(lostWiFiCount) + ", reconnecting...");
       connectToWiFi();
       // isClientConnected(client);  // added to test new mqtt code
-
-      /*if (!client.connected())
-      {
-        // added
-        client.disconnect();
-        // Attempt to reconnect
-        reconnectClientToBroker();
-        Serial.println("Broker connection remade");
-      }
-      else
-      {
-        // Client connected
-        client.loop();
-      }*/
-      reconnectClientToBroker();    // added client argument
+      reconnectClientToBroker(client);
       Serial.println("Broker connection remade");
       isConnected = false;
     }
@@ -152,61 +114,24 @@ void loop()
 
   // Some random task to send data on MQTT
   unsigned long currentTask1Time = millis();
-  if(currentTask1Time - prevTask1Time > 2000)
+  if(currentTask1Time - prevTask1Time > 1000)
   {
     countBroker++;
     // const char* charData = String("Hello World").c_str();
-    
-    client.publish(PUBLISH_TOPIC1, String(countBroker).c_str());    // third parameter was 150
-    // publishtoBroker(PUBLISH_TOPIC1, countBroker);
-    Serial.println("Published");
-
+    // client.publish(PUBLISH_TOPIC1, String(countBroker).c_str());    // third parameter was 150
+    client.publish(PUBLISH_TOPIC1, String(packet1.batterySerialNo).c_str());
     prevTask1Time = currentTask1Time;
   }
-
-
-  // commented to test new mqtt code
-  // Checking broker conenction status
-  // unsigned long currentBrokerStatusCheck = millis();
-  // if(currentBrokerStatusCheck - prevBrokerStatusCheck > MQTT_RECONNECT_TIMEOUT)
-  // {
-    /*if (!client.connected())
-    {
-      long currentBrokerConnectTime = millis();
-      if (currentBrokerConnectTime - prevBrokerReconnectTime > 5000)
-      {
-        prevBrokerReconnectTime = currentBrokerConnectTime;
-
-        // Attempt to reconnect
-        if (reconnectClientToBroker())
-        {
-          prevBrokerReconnectTime = 0; // ?
-        }
-      }
-    }
-    else
-    {
-      // Client connected
-      client.loop();
-    }*/
-    // prevBrokerStatusCheck = currentBrokerStatusCheck;
-  // }
-
 
   unsigned long currentBrokerStatusCheck = millis();
   if(currentBrokerStatusCheck - prevBrokerStatusCheck > MQTT_RECONNECT_TIMEOUT)
   {
-    if (!client.connected())
+    if(isClientConnected(client))
     {
-      client.disconnect();
-      if(reconnectClientToBroker()) // added client argument
-      {
-        Serial.println("Broker connection remade");
-      }      
+      Serial.println("Broker reconnected!");
     }
     else
     {
-      // Client connected
       client.loop();
     }
     prevBrokerStatusCheck = currentBrokerStatusCheck;

@@ -17,6 +17,9 @@ typedef enum
   RX_DATA_GET
 } rxState_e;
 
+extern Packet1_t packet1;
+extern Packet2_t packet2;
+
 // ------------------------------------------------
 // Global functions
 // ------------------------------------------------
